@@ -1,0 +1,50 @@
+version: "2"
+services:
+  nginx:
+    image: nginx:1.14
+    depends_on:
+      - app
+    links:
+      - app
+    env_file:
+      - ./.env
+    ports:
+      - ${NGINX_API_PORT}:80
+    volumes:
+      - ./docker/nginx/default.conf.template:/etc/nginx/conf.d/default.conf.template
+      - ./api:/app
+      - ./docker/nginx/entrypoint.sh:/etc/nginx/conf.d/entrypoint.sh
+    environment:
+      - CORS_LINK:${CORS_LINK}
+      - CORS_ALLOW_HEADERS_OPTIONS:${CORS_ALLOW_HEADERS_OPTIONS}
+      - CORS_ALLOW_HEADERS_TRUEPOST:${CORS_ALLOW_HEADERS_TRUEPOST}
+      - CORS_ALLOW_HEADERS_TRUEGET:${CORS_ALLOW_HEADERS_TRUEGET}
+      - CORS_ALLOW_EXPOSE_HEADERS:${CORS_ALLOW_EXPOSE_HEADERS}
+    command: sh /etc/nginx/conf.d/entrypoint.sh
+    restart: ${CONTAINER_RESTART}
+  app:
+    build: "./docker/node"
+    volumes:
+      - "./api:/app"
+      - "./docker/logs:/root/.npm"
+    command: ${RUN_COMMAND}
+    depends_on:
+      - db
+    ports:
+      - ${SERVER_PORT}:3000
+      - ${DEBUG_PORT}:5858
+    env_file:
+      - .env
+    restart: ${CONTAINER_RESTART}
+  db:
+    image: "mysql:5.7"
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - ${EXT_DB_PORT}:3306
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+    restart: ${CONTAINER_RESTART}
