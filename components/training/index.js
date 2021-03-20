@@ -283,6 +283,31 @@ router.post('/like-review',
     trainingCtrl.like);
 
 
-router.get('/image', trainingCtrl.getImage);
+/**
+ * @swagger
+ * /api/trainings/image:
+ *   get:
+ *     tags:
+ *       - Trainings
+ *     description: Get image of training
+ *     parameters:
+ *       - name: fileName
+ *         type: string
+ *         required: true
+ *         in: query
+ *
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *         description: File
+ *       401:
+ *         description: Unauthorized
+ * */
+router.get('/image',
+    validateSchema,
+    schemas.schemaGetImage,
+    passport.authenticate('jwt', {session: false}),
+    trainingCtrl.getImage);
 
 module.exports = router;
